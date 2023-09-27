@@ -59,21 +59,15 @@ jobs:
 
       - name: Set Build Status Check
         if: always()  # This step will always run
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.MY_TOKEN }}
-          script: |
-            github.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: 'Jenkins Build Status',
-              head_sha: context.sha,
-              status: 'completed',
-              conclusion: 'success',
-              output: {
-                title: 'Jenkins Build Status',
-                summary: 'Jenkins build completed successfully.',
-                text: "testasdfasf",
-              },
-            });
+        - uses: actions/checkout@v1
+        - uses: actions/create-outputs@v0.0.0-fake
+          id: test
+        - uses: LouisBrunner/checks-action@v1.6.1
+          if: always()
+          with:
+            token: ${{ secrets.MY_TOKEN }}
+            name: Test XYZ
+            conclusion: ${{ job.status }}
+            output: |
+              {"summary":"${{ steps.test.outputs.summary }}"}
 
