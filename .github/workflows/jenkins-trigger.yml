@@ -23,7 +23,7 @@ jobs:
 
           
           # Trigger the Jenkins job using curl with username and API token
-          RESPONSE=$(curl -X POST -s -i -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" "${JENKINS_JOB_URL}")
+          RESPONSE=$(curl -k -X POST -s -i -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" "${JENKINS_JOB_URL}")
 
           # Extract the build URL from the response headers
           BUILD_URL=$(echo "$RESPONSE" | grep -oP "Location: \K(.*)")
@@ -35,17 +35,17 @@ jobs:
           BUILD_NUMBER=$(basename "$BUILD_URL")
 
           # Poll the Jenkins API to check if the build has completed
-          while [ "$(curl -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.building')" == "true" ]; do
+          while [ "$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.building')" == "true" ]; do
               echo "Build in progress..."
               sleep 10
           done
           
           # Retrieve the console output of the Jenkins job
-          CONSOLE_OUTPUT=$(curl -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/consoleText" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}")
+          CONSOLE_OUTPUT=$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/consoleText" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}")
           echo $CONSOLE_OUTPUT
 
           # Create a status check using GitHub API
-          STATUS=$(curl -X POST -H "Authorization: token ${{ secrets.MY_TOKEN }}" \
+          STATUS=$(curl -k -X POST -H "Authorization: token ${{ secrets.MY_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
                   -d "{\"state\": \"success\", \"description\": \"Jenkins build completed\", \"context\": \"jenkins-build\"}" \
                   "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}")
