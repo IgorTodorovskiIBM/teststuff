@@ -61,7 +61,7 @@ jobs:
         if: always()
         uses: LouisBrunner/checks-action@v1.6.1
         with:
-          token: ${{ secrets.MY_TOKEN }}
+          token: "${{ secrets.GITHUB_TOKEN }}"
           name: Test XYZ
           conclusion: ${{ job.status }}
           output: |
