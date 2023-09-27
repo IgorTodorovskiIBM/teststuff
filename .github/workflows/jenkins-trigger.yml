@@ -42,7 +42,7 @@ jobs:
           done
 
           # Retrieve the build URL once the job has started
-          BUILD_NUMBER=$(curl -s "${{ secrets.JENKINS_SERVER_URL }}/queue/item/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_API_TOKEN }}:" | jq -r '.executable.number')
+          BUILD_NUMBER=$(curl -s "${{ secrets.JENKINS_SERVER_URL }}/queue/item/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.executable.number')
 
           # Poll the Jenkins API to check if the build has completed
           while [ "$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.building')" == "true" ]; do
