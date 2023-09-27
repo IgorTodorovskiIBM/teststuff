@@ -55,7 +55,6 @@ jobs:
           # Retrieve the console output of the Jenkins job
           CONSOLE_OUTPUT=$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/consoleText" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}")
           echo $CONSOLE_OUTPUT
-
       - name: Set Build Status Check
         if: always()  # This step will always run
         - uses: actions/checkout@v1
