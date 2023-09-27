@@ -31,12 +31,7 @@ jobs:
 
           # Extract the build URL from the response headers
           BUILD_URL=$(echo "$RESPONSE" | grep -oP "Location: \K(.*)" | tr -d '\r')
-          echo "BUILD: $BUILD_URL"
 
-      - name: Wait for Jenkins Job to Complete
-        id: wait-for-job
-        run: |
-          set -x
           # Extract the build number from the BUILD_URL
           BUILD_NUMBER=$(basename "$BUILD_URL" | tr -d '/')
 
