@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/create-outputs@v0.0.0-fake
-      - uses: LouisBrunner/checks-action@v1.6.1
       - name: Check Comment Content
         id: comment
         run: echo "::set-output name=content::$(jq -r '.comment.body' $GITHUB_EVENT_PATH)"
@@ -62,6 +59,9 @@ jobs:
           
       - name: Set build check
         if: always()
+        uses: actions/checkout@v1
+        uses: actions/create-outputs@v0.0.0-fake
+        uses: LouisBrunner/checks-action@v1.6.1
         with:
           token: ${{ secrets.MY_TOKEN }}
           name: Test XYZ
