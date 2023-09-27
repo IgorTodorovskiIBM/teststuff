@@ -20,7 +20,7 @@ jobs:
         run: |
           set -x
           # Construct the Jenkins job's build trigger URL using the secret
-          JENKINS_JOB_URL="${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/buildWithParameters?token=jenkinstest"
+          JENKINS_JOB_URL="${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/build?token=jenkinstest"
 
           
           # Trigger the Jenkins job using curl with username and API token
