@@ -55,13 +55,29 @@ jobs:
           CONSOLE_OUTPUT=$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/consoleText" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}")
           echo $CONSOLE_OUTPUT
 
-          # Create a status check using GitHub API
-          STATUS=$(curl -k -X POST -H "Authorization: token ${{ secrets.MY_TOKEN }}" \
-                  -H "Accept: application/vnd.github.v3+json" \
-                  -d "{\"state\": \"success\", \"description\": \"Jenkins build completed\", \"context\": \"jenkins-build\"}" \
-                  "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}")
+      - name: Set Build Status Check
+        if: always()  # This step will always run
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `
+            Build Number: ${BUILD_NUMBER}
+            \`\`\`
+            ${CONSOLE_OUTPUT}
+            \`\`\`
+            `;
+            github.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Jenkins Build Status',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Jenkins Build Status',
+                summary: 'Jenkins build completed successfully.',
+                text: output,
+              },
+            });
 
-          # Check if the status check was created successfully
-          if [ "$STATUS" == "null" ]; then
-              echo "Failed to create status check."
-          fi
