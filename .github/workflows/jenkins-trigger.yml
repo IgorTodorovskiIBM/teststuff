@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ... rest of the workflow ...
+      - name: Check Comment Content
+        id: comment
+        run: echo "::set-output name=content::$(jq -r '.comment.body' $GITHUB_EVENT_PATH)"
+
 
       - name: Trigger Jenkins Job
         if: ${{ steps.comment.outputs.content == '/runtests' }}
@@ -42,7 +45,7 @@ jobs:
           echo $CONSOLE_OUTPUT
 
           # Create a status check using GitHub API
-          STATUS=$(curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          STATUS=$(curl -X POST -H "Authorization: token ${{ secrets.MY_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
                   -d "{\"state\": \"success\", \"description\": \"Jenkins build completed\", \"context\": \"jenkins-build\"}" \
                   "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}")
