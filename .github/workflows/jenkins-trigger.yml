@@ -1,0 +1,60 @@
+name: Trigger Jenkins Job and Retrieve Output on "/runtests" Comment
+
+# Use the JENKINS_SERVER_URL secret
+env:
+  JENKINS_SERVER_URL: ${{ secrets.JENKINS_SERVER_URL }}
+
+on:
+  issue_comment:
+    types:
+      - created  # Trigger on new comments
+
+jobs:
+  trigger-jenkins-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ... rest of the workflow ...
+
+      - name: Trigger Jenkins Job
+        if: ${{ steps.comment.outputs.content == '/runtests' }}
+        env:
+          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+          JENKINS_USER: your_username  # Replace with your Jenkins username
+        run: |
+          # Construct the Jenkins job's build trigger URL using the secret
+          JENKINS_JOB_URL="${{ env.JENKINS_SERVER_URL }}/job/jenkins-test/buildWithParameters?token=jenkinstest"
+
+          
+          # Trigger the Jenkins job using curl with username and API token
+          RESPONSE=$(curl -X POST -s -i -u "${{ env.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" "${JENKINS_JOB_URL}")
+
+          # Extract the build URL from the response headers
+          BUILD_URL=$(echo "$RESPONSE" | grep -oP "Location: \K(.*)")
+
+      - name: Wait for Jenkins Job to Complete
+        id: wait-for-job
+        run: |
+          # Extract the build number from the BUILD_URL
+          BUILD_NUMBER=$(basename "$BUILD_URL")
+
+          # Poll the Jenkins API to check if the build has completed
+          while [ "$(curl -s "${{ env.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/api/json" -u "${{ env.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.building')" == "true" ]; do
+              echo "Build in progress..."
+              sleep 10
+          done
+          
+          # Retrieve the console output of the Jenkins job
+          CONSOLE_OUTPUT=$(curl -s "${{ env.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/consoleText" -u "${{ env.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}")
+          echo $CONSOLE_OUTPUT
+
+          # Create a status check using GitHub API
+          STATUS=$(curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  -d "{\"state\": \"success\", \"description\": \"Jenkins build completed\", \"context\": \"jenkins-build\"}" \
+                  "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}")
+
+          # Check if the status check was created successfully
+          if [ "$STATUS" == "null" ]; then
+              echo "Failed to create status check."
+          fi
