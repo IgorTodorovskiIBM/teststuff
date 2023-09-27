@@ -63,7 +63,6 @@ jobs:
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           sha: ${{ github.sha }}
-          token: ${{ steps.get_installation_token.outputs.token }}
           name: Second Job
           conclusion: ${{ job.status }}
           details_url: https://josh-ops.com/posts/github-code-coverage/
