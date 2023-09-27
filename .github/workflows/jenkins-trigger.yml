@@ -63,12 +63,6 @@ jobs:
         with:
           github-token: ${{ secrets.MY_TOKEN }}
           script: |
-            const output = `
-            Build Number: ${BUILD_NUMBER}
-            \`\`\`
-            ${CONSOLE_OUTPUT}
-            \`\`\`
-            `;
             github.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -79,7 +73,7 @@ jobs:
               output: {
                 title: 'Jenkins Build Status',
                 summary: 'Jenkins build completed successfully.',
-                text: output,
+                text: "testasdfasf",
               },
             });
 
