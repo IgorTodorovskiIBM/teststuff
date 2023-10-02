@@ -1,4 +1,4 @@
-name: Trigger Jenkins Job and Retrieve Output on "/runtests" Comment
+name: Test deployed with '/run tests' comment
 
 on:
   issue_comment:
@@ -64,6 +64,7 @@ jobs:
             echo "Job failed..."
             exit 1
           fi
+          exit 2
 
       - name: Set final commit status
         uses: myrotvorets/set-commit-status-action@master
