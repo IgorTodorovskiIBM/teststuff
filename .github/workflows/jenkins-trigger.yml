@@ -11,16 +11,14 @@ on:
 jobs:
   trigger-jenkins-job:
     runs-on: ubuntu-latest
-    if: ${{ (github.event.issue.pull_request || (github.event.comment.body == '/run tests')) }}
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/run tests')
 
     steps:
       - name: Get PR details
-        if: ${{ github.event_name == 'issue_comment'}}
         uses: xt0rted/pull-request-comment-branch@v1
         id: comment-branch
 
       - name: Set commit status as pending
-        if: ${{ github.event_name == 'issue_comment'}}
         uses: myrotvorets/set-commit-status-action@master
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
