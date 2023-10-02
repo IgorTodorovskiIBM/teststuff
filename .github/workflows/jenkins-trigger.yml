@@ -35,7 +35,7 @@ jobs:
       - name: Get PR informations
         id: pr_data
         run: |
-          echo "ref=${{ fromJson(steps.request.outputs.data).head.repo.ref }}" >> $GITHUB_STATE
+          echo "branch=${{ fromJson(steps.request.outputs.data).head.repo.branch }}" >> $GITHUB_STATE
           echo "repo_name=${{ fromJson(steps.request.outputs.data).head.repo.full_name }}" >> $GITHUB_STATE
           echo "repo_clone_url=${{ fromJson(steps.request.outputs.data).head.repo.clone_url }}" >> $GITHUB_STATE
           echo "repo_ssh_url=${{ fromJson(steps.request.outputs.data).head.repo.ssh_url }}" >> $GITHUB_STATE
@@ -48,7 +48,7 @@ jobs:
           JENKINS_JOB_URL="${{ secrets.JENKINS_SERVER_URL }}/job/Port-Pipeline/build?token=jenkinstest"
 
           # Trigger the Jenkins job using curl with username and API token
-          RESPONSE=$(curl -k -X POST -s -i -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" "${JENKINS_JOB_URL}" -F PORT_GITHUB_REPO=\"${{fromJson(steps.request.outputs.data).head.repo.full_name}}\" -F PORT_DESCRIPTION=\"\" -F PORT_BRANCH=\"${{fromJson(steps.request.outputs.data).head.ref}}\" -F NO_PROMOTE=1)
+          RESPONSE=$(curl -k -X POST -s -i -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" "${JENKINS_JOB_URL}" -F PORT_GITHUB_REPO=\"${{fromJson(steps.request.outputs.data).head.repo.repo_clone_url }}\" -F PORT_DESCRIPTION=\"\" -F PORT_BRANCH=\"${{fromJson(steps.request.outputs.data).head.branch}}\" -F NO_PROMOTE=1)
 
           # Extract the build URL from the response headers
           BUILD_URL=$(echo "$RESPONSE" | grep -oP "Location: \K(.*)" | tr -d '\r')
