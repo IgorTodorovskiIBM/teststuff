@@ -13,15 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check Comment Content
-        id: comment
-        run: echo "::set-output name=content::$(jq -r '.comment.body' $GITHUB_EVENT_PATH)"
-
-
       - name: Trigger Jenkins Job
         if: ${{ steps.comment.outputs.content == '/runtests' || github.event_name == 'pull_request' }}
         run: |
-          set -x
           # Construct the Jenkins job's build trigger URL using the secret
           JENKINS_JOB_URL="${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/build?token=jenkinstest"
 
@@ -44,17 +38,21 @@ jobs:
           # Retrieve the build URL once the job has started
           curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/queue/item/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq
           BUILD_NUMBER=$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/queue/item/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.executable.number')
-          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
 
           # Poll the Jenkins API to check if the build has completed
           while [ "$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.building')" == "true" ]; do
               echo "Build in progress..."
               sleep 10
           done
-          
+
           # Retrieve the console output of the Jenkins job
           CONSOLE_OUTPUT=$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/consoleText" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}")
-          echo $CONSOLE_OUTPUT
+          echo "$CONSOLE_OUTPUT"
+
+          if [ "$(curl -k -s "${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/${BUILD_NUMBER}/api/json" -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" | jq -r '.result')" != "SUCCESS" ]; then
+            echo "Job failed..."
+            exit 1
+          fi
 
       - name: Get PR details
         uses: xt0rted/pull-request-comment-branch@v1
