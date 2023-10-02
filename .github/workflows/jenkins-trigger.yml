@@ -11,10 +11,23 @@ on:
 jobs:
   trigger-jenkins-job:
     runs-on: ubuntu-latest
+    if: ${{ (github.event.issue.pull_request && (github.event.comment.body == '/run tests')) }}
 
     steps:
+      - name: Get PR details
+        if: ${{ github.event_name == 'issue_comment'}}
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      - name: Set commit status as pending
+        if: ${{ github.event_name == 'issue_comment'}}
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
       - name: Trigger Jenkins Job
-        if: ${{ steps.comment.outputs.content == '/runtests' || github.event_name == 'pull_request' }}
         run: |
           # Construct the Jenkins job's build trigger URL using the secret
           JENKINS_JOB_URL="${{ secrets.JENKINS_SERVER_URL }}/job/jenkins-test/build?token=jenkinstest"
@@ -53,22 +66,6 @@ jobs:
             echo "Job failed..."
             exit 1
           fi
-
-      - name: Get PR details
-        uses: xt0rted/pull-request-comment-branch@v1
-        id: comment-branch
-      - name: Set commit status as pending
-        uses: myrotvorets/set-commit-status-action@master
-        with:
-          sha: ${{ steps.comment-branch.outputs.head_sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: pending
-
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ steps.comment-branch.outputs.head_ref }}
-      - name: Print stuff
-        run: echo "Hello dudes!"
 
       - name: Set final commit status
         uses: myrotvorets/set-commit-status-action@master
